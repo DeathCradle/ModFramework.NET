@@ -14,5 +14,6 @@ packages/
 
 bin/
 obj/
+References/
 
 *.lock.json

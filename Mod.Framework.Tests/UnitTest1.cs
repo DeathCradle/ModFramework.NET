@@ -55,7 +55,7 @@ namespace Mod.Framework.Tests
 				var test = fw.Query("Mod.Framework.Tests.ClassToBeModified.Test()").As<MethodDefinition>();
 				var code = test.Decompile();
 
-				test.ApplyPatch("");
+				//test.ApplyPatch("");
 			}
 		}
 
