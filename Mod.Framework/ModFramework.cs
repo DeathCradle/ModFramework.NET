@@ -22,7 +22,7 @@ namespace Mod.Framework
 		public List<Assembly> Assemblies { get; set; } = new List<Assembly>();
 		public List<AssemblyDefinition> CecilAssemblies { get; private set; } = new List<AssemblyDefinition>();
 
-		public string DefaultModuleGlob { get; } = @"../../../Mod.Framework.**/bin/Debug/Mod.Framework.**.dll";
+		//public string DefaultModuleGlob { get; } = @"../../../Mod.Framework.**/bin/Debug/Mod.Framework.**.dll";
 
 		public ModFramework(params Assembly[] module_assemblies)
 		{
@@ -47,7 +47,8 @@ namespace Mod.Framework
 
 				_kernel.Bind<ModFramework>().ToConstant(this);
 
-				LoadExternalModules();
+				//LoadExternalModules();
+				this.UpdateCecilAssemblies();
 
 				_kernel.Bind(c => c.From(this.Assemblies)
 					.SelectAllClasses()
@@ -59,10 +60,10 @@ namespace Mod.Framework
 			}
 		}
 
-		private void LoadExternalModules()
-		{
-			this.RegisterAssemblies(this.DefaultModuleGlob);
-		}
+		//private void LoadExternalModules()
+		//{
+		//	this.RegisterAssemblies(this.DefaultModuleGlob);
+		//}
 
 		/// <summary>
 		/// Syncs any .NET assemblies, to cecil assemblies

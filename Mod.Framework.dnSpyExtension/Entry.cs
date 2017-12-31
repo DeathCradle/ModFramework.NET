@@ -80,7 +80,7 @@ namespace Mod.Framework.dnSpyExtension
 			//var node = documentTreeView.FindNode(nodeDataItem.);
 			var nodes = node == null ? Array.Empty<DocumentTreeNodeData>() : new DocumentTreeNodeData[] { node };
 
-			
+
 		}
 
 		public override ImageReference? GetIcon(IMenuItemContext context)
