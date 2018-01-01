@@ -40,6 +40,8 @@ namespace Mod.Framework.Setup
 			{
 				Console.ForegroundColor = ConsoleColor.Red;
 				Console.WriteLine(ex);
+				Console.WriteLine("Press any key to exit");
+				Console.ReadKey();
 			}
 		}
 
@@ -51,7 +53,13 @@ namespace Mod.Framework.Setup
 			dnspy = Path.Combine(references, "dnSpy");
 
 			Directory.CreateDirectory(references);
-			Directory.CreateDirectory(dnspy);
+
+			var dnspy_info = new DirectoryInfo(dnspy);
+			if (dnspy_info.Exists)
+				dnspy_info.Delete(true);
+
+			dnspy_info.Create();
+			dnspy_info.Refresh();
 		}
 
 		static async Task SetupFramework()
@@ -62,6 +70,9 @@ namespace Mod.Framework.Setup
 			var path = await DownloadRelease(release);
 
 			ExtractZip(path);
+
+			PatchEditMethodCodeVM();
+			PatchUtils();
 		}
 
 		static async Task<GitHubRelease> FindDnspyRelease(string url)
@@ -145,6 +156,66 @@ namespace Mod.Framework.Setup
 		{
 			Console.WriteLine($"Extracting {file.FullName} to {file.Directory.FullName}");
 			ZipFile.ExtractToDirectory(file.FullName, file.Directory.FullName);
+		}
+
+		static void PatchEditMethodCodeVM()
+		{
+			string path = Path.Combine(dnspy, "dnSpy.AsmEditor.x.dll");
+			Console.WriteLine("Patching " + path);
+
+			var assembly = System.IO.File.ReadAllBytes(path);
+			Environment.CurrentDirectory = Path.GetDirectoryName(path);
+			using (var ms = new MemoryStream(assembly))
+			{
+				var asm = Mono.Cecil.AssemblyDefinition.ReadAssembly(ms);
+
+				foreach (var typeName in new[] {
+					"dnSpy.AsmEditor.Compiler.EditMethodCodeVM",
+					"dnSpy.AsmEditor.Compiler.EditCodeVMCreator",
+					"dnSpy.AsmEditor.Compiler.EditCodeVM",
+					"dnSpy.AsmEditor.UndoRedo.IUndoCommandService",
+					"dnSpy.AsmEditor.UndoRedo.UndoCommandService",
+					//"dnSpy.AsmEditor.Commands.CodeContext",
+					//"dnSpy.AsmEditor.Commands.CodeContextMenuHandler"
+				})
+				{
+					var type = asm.Modules
+						.SelectMany(m => m.Types)
+						.Single(t => t.FullName.Equals(typeName, StringComparison.CurrentCultureIgnoreCase));
+
+					type.IsPublic = true;
+					type.IsNotPublic = false;
+				}
+
+				asm.Write(path);
+			}
+		}
+
+		static void PatchUtils()
+		{
+			string path = Path.Combine(dnspy, "dnSpy.Contracts.DnSpy.dll");
+			Console.WriteLine("Patching " + path);
+
+			var assembly = System.IO.File.ReadAllBytes(path);
+			Environment.CurrentDirectory = Path.GetDirectoryName(path);
+			using (var ms = new MemoryStream(assembly))
+			{
+				var asm = Mono.Cecil.AssemblyDefinition.ReadAssembly(ms);
+
+				foreach (var typeName in new[] {
+					"dnSpy.Contracts.Utilities.UIUtilities"
+				})
+				{
+					var type = asm.Modules
+						.SelectMany(m => m.Types)
+						.Single(t => t.FullName.Equals(typeName, StringComparison.CurrentCultureIgnoreCase));
+
+					type.IsPublic = true;
+					type.IsNotPublic = false;
+				}
+
+				asm.Write(path);
+			}
 		}
 	}
 
